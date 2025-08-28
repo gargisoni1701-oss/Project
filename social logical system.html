@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Social Login</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        .card {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        .provider-btn {
+            transition: all 0.2s ease;
+        }
+        .provider-btn:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+        .otp-input {
+            letter-spacing: 20px;
+            text-indent: 10px;
+        }
+        .wave-animation {
+            animation: wave 2s infinite;
+        }
+        @keyframes wave {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen flex items-center justify-center p-4">
+    <div id="login-container" class="w-full max-w-md">
+        <div class="card bg-white rounded-xl overflow-hidden shadow-xl">
+            <!-- Header with animated illustration -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white text-center relative">
+                <img src="https://placehold.co/600x400" alt="Abstract digital illustration of login security with futuristic lock and shield icons in blue and purple tones" class="h-32 mx-auto wave-animation">
+                <h1 class="text-2xl font-bold mt-4">Welcome Back!</h1>
+                <p class="text-blue-100">Login with your favorite method</p>
+            </div>
+
+            <!-- Login Form -->
+            <div class="p-6">
+                <form id="email-form" class="mb-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="email" placeholder="your@email.com" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input type="password" id="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center">
+                            <i class="fas fa-sign-in-alt mr-2"></i> Sign In
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Social Login Providers -->
+                <div class="flex flex-col space-y-3 mb-6">
+                    <button id="google-login" class="provider-btn w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                        <i class="fab fa-google text-red-500 mr-2"></i> Continue with Google
+                    </button>
+                    <button id="facebook-login" class="provider-btn w-full bg-blue-800 hover:bg-blue-900 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                        <i class="fab fa-facebook-f mr-2"></i> Continue with Facebook
+                    </button>
+                    <button id="github-login" class="provider-btn w-full bg-gray-800 hover:bg-gray-900 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                        <i class="fab fa-github mr-2"></i> Continue with GitHub
+                    </button>
+                </div>
+
+                <!-- Phone Login Section -->
+                <div class="mb-4">
+                    <div class="relative flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                        <div class="px-4 text-sm text-gray-500 bg-white">OR</div>
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                </div>
+
+                <div id="phone-login-section">
+                    <div class="mb-3">
+                        <label for="phone-number" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                        <div class="flex">
+                            <select class="bg-gray-100 border border-gray-300 text-gray-700 rounded-l-lg focus:ring-blue-500 focus:border-blue-500 px-2 outline-none">
+                                <option>US +1</option>
+                                <option>UK +44</option>
+                                <option>IN +91</option>
+                            </select>
+                            <input type="tel" id="phone-number" placeholder="1234567890" class="flex-1 px-4 py-2 border-t border-b border-r border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        </div>
+                    </div>
+                    <button id="send-otp" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                        Send OTP
+                    </button>
+                </div>
+
+                <div id="otp-section" class="hidden mt-4">
+                    <p class="text-sm text-gray-600 mb-2">Enter the 6-digit code sent to your phone</p>
+                    <input type="text" id="otp-code" maxlength="6" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition otp-input text-center font-bold">
+                    <button id="verify-otp" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                        Verify OTP
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-gray-50 px-6 py-4 text-center">
+                <p class="text-sm text-gray-600">Don't have an account? <a href="#" class="text-blue-600 hover:text-blue-800 font-medium">Sign up</a></p>
+                <p class="text-xs text-gray-500 mt-2">By continuing, you agree to our Terms of Service</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Profile (Hidden by default) -->
+    <div id="profile-container" class="hidden w-full max-w-md">
+        <div class="card bg-white rounded-xl overflow-hidden shadow-xl">
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white text-center relative">
+                <img id="profile-picture" src="https://placehold.co/150/3b82f6/ffffff" alt="User profile picture" class="h-24 w-24 rounded-full border-4 border-white mx-auto mb-4">
+                <h2 id="profile-name" class="text-xl font-bold">Welcome User</h2>
+                <p id="profile-email" class="text-blue-100 text-sm">user@example.com</p>
+            </div>
+
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h3 class="font-medium text-gray-700">Account Details</h3>
+                        <p id="profile-provider" class="text-sm text-gray-500 mt-1">Signed in with Email</p>
+                    </div>
+
+                    <div id="phone-info" class="p-4 bg-gray-50 rounded-lg hidden">
+                        <h3 class="font-medium text-gray-700">Phone Number</h3>
+                        <p id="profile-phone" class="text-sm text-gray-500 mt-1">Not verified</p>
+                    </div>
+
+                    <button id="logout-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration and App Logic -->
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDEXAMPLEbB0mQBjSAXAMPLE",
+            authDomain: "your-project-id.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project-id.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abc123EXAMPLE"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // DOM elements
+        const loginContainer = document.getElementById('login-container');
+        const profileContainer = document.getElementById('profile-container');
+        const profileName = document.getElementById('profile-name');
+        const profileEmail = document.getElementById('profile-email');
+        const profilePicture = document.getElementById('profile-picture');
+        const profileProvider = document.getElementById('profile-provider');
+        const profilePhone = document.getElementById('profile-phone');
+        const phoneInfo = document.getElementById('phone-info');
+        const logoutBtn = document.getElementById('logout-btn');
+        const googleLogin = document.getElementById('google-login');
+        const facebookLogin = document.getElementById('facebook-login');
+        const githubLogin = document.getElementById('github-login');
+        const sendOtpBtn = document.getElementById('send-otp');
+        const verifyOtpBtn = document.getElementById('verify-otp');
+        const otpSection = document.getElementById('otp-section');
+        const phoneNumberInput = document.getElementById('phone-number');
+        const otpCodeInput = document.getElementById('otp-code');
+
+        // Check auth state
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                showProfile(user);
+            } else {
+                showLogin();
+            }
+        });
+
+        // Show profile page
+        function showProfile(user) {
+            loginContainer.classList.add('hidden');
+            profileContainer.classList.remove('hidden');
+            
+            profileName.textContent = user.displayName || 'Welcome User';
+            profileEmail.textContent = user.email || '';
+            
+            // Set profile picture
+            const defaultPhoto = 'https://placehold.co/150/3b82f6/ffffff';
+            profilePicture.src = user.photoURL || defaultPhoto;
+            profilePicture.alt = `Profile picture of ${user.displayName || 'user'}`;
+            
+            // Set provider
+            if (user.providerData && user.providerData.length > 0) {
+                const providerId = user.providerData[0].providerId;
+                const providerName = providerId.split('.')[0];
+                profileProvider.textContent = `Signed in with ${providerName.charAt(0).toUpperCase() + providerName.slice(1)}`;
+            } else {
+                profileProvider.textContent = 'Signed in with Email';
+            }
+            
+            // Show phone number if verified
+            if (user.phoneNumber) {
+                phoneInfo.classList.remove('hidden');
+                profilePhone.textContent = user.phoneNumber;
+            }
+        }
+
+        // Show login page
+        function showLogin() {
+            loginContainer.classList.remove('hidden');
+            profileContainer.classList.add('hidden');
+            otpSection.classList.add('hidden');
+            
+            // Reset form fields
+            phoneNumberInput.value = '';
+            otpCodeInput.value = '';
+        }
+
+        // Email/Password login
+        document.getElementById('email-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // Google login
+        googleLogin.addEventListener('click', async () => {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                await auth.signInWithPopup(provider);
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // Facebook login
+        facebookLogin.addEventListener('click', async () => {
+            try {
+                const provider = new firebase.auth.FacebookAuthProvider();
+                await auth.signInWithPopup(provider);
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // GitHub login
+        githubLogin.addEventListener('click', async () => {
+            try {
+                const provider = new firebase.auth.GithubAuthProvider();
+                await auth.signInWithPopup(provider);
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // Send OTP
+        let confirmationResult;
+        sendOtpBtn.addEventListener('click', async () => {
+            const phoneNumber = document.getElementById('phone-number').value;
+            
+            if (!phoneNumber) {
+                alert('Please enter a valid phone number');
+                return;
+            }
+            
+            try {
+                // Format phone number (assuming US format for simplicity)
+                const formattedPhoneNumber = `+1${phoneNumber}`;
+                
+                // Send OTP
+                confirmationResult = await auth.signInWithPhoneNumber(formattedPhoneNumber);
+                
+                // Show OTP section
+                otpSection.classList.remove('hidden');
+                sendOtpBtn.textContent = 'Resend OTP';
+                
+                alert('OTP has been sent to your phone number');
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // Verify OTP
+        verifyOtpBtn.addEventListener('click', async () => {
+            const otpCode = document.getElementById('otp-code').value;
+            
+            if (!otpCode || otpCode.length !== 6) {
+                alert('Please enter a valid 6-digit OTP code');
+                return;
+            }
+            
+            try {
+                await confirmationResult.confirm(otpCode);
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // Logout
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut();
+        });
+
+        // Initialize Recaptcha for phone auth
+        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('send-otp', {
+            size: 'invisible',
+            callback: (response) => {
+                // reCAPTCHA solved, allow sendOtp
+            }
+        });
+    </script>
+</body>
+</html>
